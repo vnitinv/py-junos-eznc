@@ -1,6 +1,11 @@
+import json
+
 from jnpr.junos.utils.sw import SW
 from jnpr.junos.utils.config import Config
-
+from lxml import etree
+from lxml.builder import E
+from pyangbind.lib.serialise import pybindIETFJSONEncoder
+import jxmlease
 
 class YANG(SW, Config):
     def __init__(self, dev):
@@ -28,3 +33,15 @@ class YANG(SW, Config):
         _progress("request system software delete %s:\nOutput: %s" % (package,
             output_msg))
         return rc == 0
+
+    def load(self, conf):
+        conf = json.loads(json.dumps(
+            pybindIETFJSONEncoder.generate_element(conf, flt=True),
+            cls=pybindIETFJSONEncoder, indent=4))
+        conf_xml = jxmlease.emit_xml(conf, full_document=False).encode('utf-8')
+        parser = etree.XMLParser(recover=True)
+        conf_xml = etree.fromstring(conf_xml, parser)
+        conf_xml.set('xmlns', "http://openconfig.net/yang/bgp")
+        conf_xml = E('edit-config', E('config', conf_xml))
+        print etree.tostring(conf_xml)
+        return self._dev.execute(conf_xml)
