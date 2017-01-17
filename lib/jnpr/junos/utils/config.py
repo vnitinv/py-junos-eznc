@@ -2,10 +2,14 @@
 import os
 import re
 import warnings
+import json
 
 # 3rd-party modules
 from lxml import etree
+from lxml.builder import E
 from ncclient.operations import RPCError
+from pyangbind.lib.serialise import pybindIETFJSONEncoder
+import jxmlease
 
 # package modules
 from jnpr.junos.exception import *
@@ -361,6 +365,19 @@ class Config(Util):
         # ---------------------------------------------------------------------
         # end-of: private helpers
         # ---------------------------------------------------------------------
+
+        if vargs[0].__class__.__base__.__name__ == 'PybindBase':
+            conf = json.loads(json.dumps(
+                pybindIETFJSONEncoder.generate_element(vargs[0], flt=True),
+                cls=pybindIETFJSONEncoder, indent=4))
+            conf_xml = jxmlease.emit_xml(conf,
+                                         full_document=False).encode('utf-8')
+            parser = etree.XMLParser(recover=True)
+            conf_xml = etree.fromstring(conf_xml, parser)
+            conf_xml.set('xmlns', "http://openconfig.net/yang/bgp")
+            conf_xml = E('edit-config', E('config', conf_xml))
+            print etree.tostring(conf_xml)
+            return self._dev.execute(conf_xml)
 
         if 'format' in kvargs:
             _lset_format(kvargs, rpc_xattrs)

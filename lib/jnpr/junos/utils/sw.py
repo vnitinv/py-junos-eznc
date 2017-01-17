@@ -823,3 +823,23 @@ class SW(Util):
         pkgs = fs.ls('/packages')
         return dict(current=pkgs['files'].get(
             'junos'), rollback=pkgs['files'].get('junos.old'))
+
+    # -------------------------------------------------------------------------
+    # delete - delete installed package
+    # -------------------------------------------------------------------------
+
+    def delete(self, package, progress=False, timeout=300, **kwargs):
+        """
+        This function can be used to delete installed package
+        Underhood rpc called: request-package-delete
+        :return: True/False
+        """
+        rsp = self.rpc.request_package_delete(package_name=package,
+                                              dev_timeout=timeout, **kwargs)
+        got = rsp.getparent()
+        rc = int(got.findtext('package-result').strip())
+        output_msg = '\n'.join([i.text for i in got.findall('output')
+                                if i.text is not None])
+        self.log("request system software delete %s:\nOutput: %s" %
+                 (package, output_msg))
+        return rc == 0
