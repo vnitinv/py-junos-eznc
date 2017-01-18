@@ -27,7 +27,8 @@ from jnpr.junos.rpcmeta import _RpcMetaExec
 from jnpr.junos import exception as EzErrors
 from jnpr.junos.facts import *
 from jnpr.junos import jxml as JXML
-from jnpr.junos.decorators import timeoutDecorator, normalizeDecorator
+from jnpr.junos.decorators import timeoutDecorator, normalizeDecorator, \
+    ignoreWarnDecorator
 
 
 _MODULEPATH = os.path.dirname(__file__)
@@ -509,6 +510,7 @@ class _Connection(object):
     # execute
     # ------------------------------------------------------------------------
 
+    @ignoreWarnDecorator
     @normalizeDecorator
     @timeoutDecorator
     def execute(self, rpc_cmd, **kvargs):

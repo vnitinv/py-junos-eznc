@@ -65,7 +65,7 @@ class _RpcMetaExec(object):
     # get
     # -----------------------------------------------------------------------
 
-    def get(self, filter_type='xpath', filter_source=None):
+    def get(self, filter_type='xpath', filter_source=None, **kwargs):
         """
         Retrieve running configuration and device state information using
         <get> rpc
@@ -80,7 +80,7 @@ class _RpcMetaExec(object):
             filter_params['source'] = filter_source
         rpc = E('get', E('filter', filter_params))
 
-        return self._junos.execute(rpc)
+        return self._junos.execute(rpc, **kwargs)
 
     # -----------------------------------------------------------------------
     # load_config
