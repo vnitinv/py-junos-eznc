@@ -40,7 +40,8 @@ class _RpcMetaExec(object):
 
         """
         if 'source' in kwargs:
-            nmspaces = {'bgp': "http://openconfig.net/yang/bgp"}
+            nmspaces = {'bgp': "http://openconfig.net/yang/bgp",
+                        'interfaces': "http://openconfig.net/yang/interfaces"}
             rpc = E('get-config', E('source', E(kwargs.pop('source'))))
             if 'filter_subtree' in kwargs:
                 filter_source = etree.fromstring(kwargs.pop('filter_subtree'))
