@@ -41,14 +41,14 @@ class _RpcMetaExec(object):
         """
         if 'source' in kwargs:
             nmspaces = {'bgp': "http://openconfig.net/yang/bgp"}
-            rpc = E('get-config', E('source', E(kwargs['source'])))
+            rpc = E('get-config', E('source', E(kwargs.pop('source'))))
             if 'filter_subtree' in kwargs:
-                filter_source = etree.fromstring(kwargs['filter_subtree'])
+                filter_source = etree.fromstring(kwargs.pop('filter_subtree'))
                 filter_source.attrib['xmlns'] = nmspaces.get(filter_source.tag)
                 fil_sub = E('filter', {'type': "subtree"})
                 fil_sub.append(filter_source)
                 rpc.append(fil_sub)
-            return self._junos.execute(rpc)
+            return self._junos.execute(rpc, **kwargs)
 
         rpc = E('get-configuration', options)
 
@@ -59,7 +59,7 @@ class _RpcMetaExec(object):
             at_here = rpc if cfg_tag == filter_xml.tag else E(cfg_tag)
             at_here.append(filter_xml)
             if at_here is not rpc: rpc.append(at_here)
-        return self._junos.execute(rpc)
+        return self._junos.execute(rpc, **kwargs)
 
     # -----------------------------------------------------------------------
     # get
