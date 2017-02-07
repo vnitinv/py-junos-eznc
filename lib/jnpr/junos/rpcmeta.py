@@ -21,7 +21,7 @@ class _RpcMetaExec(object):
     # get_config
     # -----------------------------------------------------------------------
 
-    def get_config(self, filter_xml=None, options={}, **kwargs):
+    def get_config(self, filter_xml=None, options={}, model=None, **kwargs):
         """
         retrieve configuration from the Junos device
 
@@ -38,35 +38,34 @@ class _RpcMetaExec(object):
         config = dev.rpc.get_config(filter_xml=etree.XML('<configuration><system><host-name/></system></configuration>'), 
                  options={'database':'committed','inherit':'inherit'})
 
+        :model: Can provide yang model openconfig/custom
+
         """
-        if 'source' in kwargs:
-            nmspaces = {'bgp': "http://openconfig.net/yang/bgp",
-                        'interfaces': "http://openconfig.net/yang/interfaces"}
-            rpc = E('get-config', E('source', E(kwargs.pop('source'))))
-            if 'filter_subtree' in kwargs:
-                filter_source = etree.fromstring(kwargs.pop('filter_subtree'))
-                filter_source.attrib['xmlns'] = nmspaces.get(filter_source.tag)
-                fil_sub = E('filter', {'type': "subtree"})
-                fil_sub.append(filter_source)
-                rpc.append(fil_sub)
-            return self._junos.execute(rpc, **kwargs)
+
+        nmspaces = {'openconfig': "http://openconfig.net/yang/",
+                    'custom': "http://yang.juniper.net/customyang/"}
 
         rpc = E('get-configuration', options)
 
         if filter_xml is not None:
             # wrap the provided filter with toplevel <configuration> if
             # it does not already have one
-            cfg_tag = 'configuration'
-            at_here = rpc if cfg_tag == filter_xml.tag else E(cfg_tag)
-            at_here.append(filter_xml)
-            if at_here is not rpc: rpc.append(at_here)
-        return self._junos.execute(rpc, **kwargs)
+            if filter_xml.tag != 'configuration' and not nmspaces.get(model):
+                etree.SubElement(rpc, 'configuration').append(filter_xml)
+            else:
+                if model is not None:
+                    ns = nmspaces.get(model.lower())
+                    filter_xml.attrib['xmlns'] = ns + filter_xml.tag
+                rpc.append(filter_xml)
+        response = self._junos.execute(rpc, **kwargs)
+        # in case of model provided top level should be rpc-reply or data??
+        return response if model is None else response.getparent()
 
     # -----------------------------------------------------------------------
     # get
     # -----------------------------------------------------------------------
 
-    def get(self, filter_source=None, **kwargs):
+    def get(self, filter_select=None, **kwargs):
         """
         Retrieve running configuration and device state information using
         <get> rpc
@@ -74,17 +73,22 @@ class _RpcMetaExec(object):
         For example::
           dev.rpc.get()
           or
-          dev.rpc.get(filter_source='bgp') or dev.rpc.get('bgp')
+          dev.rpc.get(ignore_warning=True)
           or
-          dev.rpc.get(filter_source='bgp/neighbors')
+          dev.rpc.get(filter_select='bgp') or dev.rpc.get('bgp')
+          or
+          dev.rpc.get(filter_select='bgp/neighbors')
 
-        :param str filter_source:
-          the element or sub element to be fetched
+        :param str filter_select:
+          The select attribute will be treated as an XPath expression and
+          used to filter the returned data.
+
+        :returns: xml object
         """
         # junos only support filter type to be xpath
         filter_params = {'type': 'xpath'}
-        if filter_source is not None:
-            filter_params['source'] = filter_source
+        if filter_select is not None:
+            filter_params['source'] = filter_select
         rpc = E('get', E('filter', filter_params))
         return self._junos.execute(rpc, **kwargs)
 
