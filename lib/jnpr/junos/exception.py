@@ -33,6 +33,7 @@ class RpcError(Exception):
         self.timeout = timeout
         self.re = re
         self.rpc_error = None
+        self.xml = rsp[0] if 'rpc-reply' == rsp.tag else rsp
         # To handle errors coming from ncclient, Here errs is list of RPCError
         if isinstance(errs, RPCError) and hasattr(errs, 'errors'):
             self.errs = [JXML.rpc_error(error.xml) for error in errs.errors]

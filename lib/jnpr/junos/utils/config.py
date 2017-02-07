@@ -8,13 +8,13 @@ import json
 from lxml import etree
 from lxml.builder import E
 from ncclient.operations import RPCError
-from pyangbind.lib.serialise import pybindIETFJSONEncoder
 import jxmlease
 
 # package modules
 from jnpr.junos.exception import *
 from jnpr.junos import jxml as JXML
 from jnpr.junos.utils.util import Util
+from jnpr.junos.decorators import ignoreWarnDecorator
 
 """
 Configuration Utilities
@@ -229,6 +229,7 @@ class Config(Util):
     # helper on loading configs
     # -------------------------------------------------------------------------
 
+    @ignoreWarnDecorator
     def load(self, *vargs, **kvargs):
         """
         Loads changes into the candidate configuration.  Changes can be
@@ -379,6 +380,7 @@ class Config(Util):
         # ---------------------------------------------------------------------
 
         if vargs[0].__class__.__base__.__name__ == 'PybindBase':
+            from pyangbind.lib.serialise import pybindIETFJSONEncoder
             conf = json.loads(json.dumps(
                 pybindIETFJSONEncoder.generate_element(vargs[0], flt=True),
                 cls=pybindIETFJSONEncoder, indent=4))
@@ -388,7 +390,7 @@ class Config(Util):
             conf_xml = etree.fromstring(conf_xml, parser)
             conf_xml.set('xmlns', "http://openconfig.net/yang/bgp")
             conf_xml = E('edit-config', E('config', conf_xml))
-            print etree.tostring(conf_xml)
+            # print etree.tostring(conf_xml)
             return self._dev.execute(conf_xml)
 
         if 'format' in kvargs:
