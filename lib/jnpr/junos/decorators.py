@@ -2,6 +2,7 @@
 from functools import wraps
 from jnpr.junos.exception import RpcError
 from jnpr.junos.jxml import normalize_xslt
+from jnpr.junos import jxml as JXML
 
 
 def timeoutDecorator(function):
@@ -88,7 +89,9 @@ def ignoreWarnDecorator(function):
                     # ignore warning
                     if hasattr(ex, 'rpc_error') and\
                                     ex.rpc_error['severity'] == 'warning':
-                        return ex.rsp.getparent()
+                        # even with JXML.remove_namespaces call,
+                        # namespaces still remains with xml data tag
+                        return JXML.remove_namespaces(ex.rsp.getparent())
                     else:
                         raise ex
                 except Exception:

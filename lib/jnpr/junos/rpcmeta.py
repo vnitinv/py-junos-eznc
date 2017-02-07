@@ -66,21 +66,26 @@ class _RpcMetaExec(object):
     # get
     # -----------------------------------------------------------------------
 
-    def get(self, filter_type='xpath', filter_source=None, **kwargs):
+    def get(self, filter_source=None, **kwargs):
         """
         Retrieve running configuration and device state information using
         <get> rpc
 
-        :filter_source: the element or sub element to be fetched
+        For example::
+          dev.rpc.get()
+          or
+          dev.rpc.get(filter_source='bgp') or dev.rpc.get('bgp')
+          or
+          dev.rpc.get(filter_source='bgp/neighbors')
 
-        data = dev.rpc.get(filter_source='bgp')
-
+        :param str filter_source:
+          the element or sub element to be fetched
         """
-        filter_params = {'type': filter_type}
+        # junos only support filter type to be xpath
+        filter_params = {'type': 'xpath'}
         if filter_source is not None:
             filter_params['source'] = filter_source
         rpc = E('get', E('filter', filter_params))
-
         return self._junos.execute(rpc, **kwargs)
 
     # -----------------------------------------------------------------------
