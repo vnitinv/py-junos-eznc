@@ -67,6 +67,7 @@ class _MyTemplateLoader(jinja2.BaseLoader):
             source = f.read()
         return source, path, lambda: mtime == os.path.getmtime(path)
 
+
 _Jinja2ldr = jinja2.Environment(loader=_MyTemplateLoader())
 
 
