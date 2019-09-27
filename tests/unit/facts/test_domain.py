@@ -43,8 +43,10 @@ class TestDomain(unittest.TestCase):
         fpath = os.path.join(os.path.dirname(__file__),
                              'rpc-reply', fname)
         foo = open(fpath).read()
-
-        rpc_reply = NCElement(foo,
+        import sys
+        encode = None if sys.version < '3' else 'unicode'
+        # check if we can exchange transform_reply with remove_namespaces_and_spaces
+        rpc_reply = NCElement(etree.tostring(foo, encoding=encode),
                               self.dev._conn._device_handler
                               .transform_reply())._NCElement__doc[0]
         return rpc_reply

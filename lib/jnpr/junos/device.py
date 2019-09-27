@@ -32,6 +32,7 @@ from jnpr.junos import jxml as JXML
 from jnpr.junos.decorators import timeoutDecorator, normalizeDecorator, \
     ignoreWarnDecorator
 from jnpr.junos.exception import JSONLoadError, ConnectError
+from jnpr.junos.jxml import remove_namespaces_and_spaces
 
 # check for ncclient support for filter_xml. Remove these changes once ncclient
 # release filter_xml/SAX parsing feature
@@ -1031,7 +1032,7 @@ class Device(_Connection):
         :returns: the current RPC XML Transformation.
         """
         try:
-            return self._conn._device_handler.transform_reply
+            return lambda: remove_namespaces_and_spaces
         except AttributeError:
             if self._conn is None:
                 raise ConnectError(self, "Not connected to the Device")
